@@ -79,7 +79,7 @@
   "dependencies": {
     "alice-bob": "^2.0.0",
     "better-console-time": "^1.0.0",
-    "monolang": "^2.0.0",
+    "monolang": "^3.0.0",
     "scheduler-node": "^1.0.0"
   },
   "types": "./dist/types/index.d.ts"
