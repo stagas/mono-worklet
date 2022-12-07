@@ -1,30 +1,19 @@
 export const copyBuffers = (
-  blockSize: number,
-  tree: Float32Array[][],
-  count: number[],
-  floats: Float32Array,
-  reverse = false,
+  from: (Float32Array | null)[],
+  to: Float32Array[],
+  channelCount: number,
+  vm: any,
 ) => {
-  if (count.length > 0) {
-    let buffer: Float32Array
-
-    let pos = 0
-
-    for (let x = 0; x < count.length; x++) {
-      if (!tree[x]) break
-
-      for (let y = 0; y < count[x]; y++) {
-        if (!tree[x][y]) break
-
-        buffer = floats.subarray(pos * blockSize, (pos + 1) * blockSize)
-
-        if (reverse)
-          tree[x][y].set(buffer)
-        else
-          buffer.set(tree[x][y])
-
-        pos++
-      }
+  for (let channel = 0; channel < channelCount; channel++) {
+    const target = to[channel]
+    const source = from[channel]
+    if (!target) {
+      console.warn('Target channel not found:', channel, channelCount, to)
+      console.warn(vm.code)
+    } else if (!source) {
+      target.fill(0)
+    } else {
+      target.set(source)
     }
   }
 }
