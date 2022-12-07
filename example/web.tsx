@@ -9,20 +9,29 @@ import { MonoNode } from '..' // <- we use the dist/ files for the worklet to wo
 const sampleRate = 44100
 
 const code = `\
-#voices:(4,2); \\ voices (time,hz)
-note_to_hz(x)=440*2**((x-33)/12);
-note_on(x)=(hz=note_to_hz(x);#voices=(t,hz);0);
-sine(hz=330.0)=({p};{p}+=(pi2*hz/sr)+(p>pi2?-pi2:0);sin(p));
-sqr(hz=330.0)=(sine(hz)>0?1:-1);
-play(vt,hz,.a[0.5..100]=100,.r[0.5..20]=10.0,.v[1..40.0]=5.0,.va[5..50.0]=10)=(
-  dt=t-vt;
-  A=1-exp(-dt*a);
-  R=exp(-dt*r);
-  s=sine(hz+sqr(v)*va)*A*R;
-  s
+#:1,2;
+write_note(x)=(
+  #=(t,note_to_hz(x));
+  0
 );
-f()=tanh((#voices::play)*1.0)
+midi_in(op=0,x=0,y=0)=(
+  op==144 && write_note(x);drop;
+  0
+);
+f()=((nt,y)=#(-1);saw(y)*env(nt))
+
 `
+// a=300.0;
+// play(x=300.0)=(
+//   a=x;
+//   a
+// );
+
+// midi_in(x=1,y=1,z=1)=
+//  (a=note_to_hz(y);0);
+
+// f()=sine(a)
+// `
 
 const ctx = new AudioContext({ sampleRate, latencyHint: 0.06 })
 
@@ -34,7 +43,7 @@ const main = async () => {
   midiEvent.receivedTime = 0
   const schedulerGroupNode = new SchedulerEventGroupNode(mainSchedulerNode)
   schedulerGroupNode.eventGroup.replaceAllWithNotes([[0, 40, 127, .1]])
-  schedulerGroupNode.eventGroup.loopEnd = 1 / 5
+  schedulerGroupNode.eventGroup.loopEnd = 1
   schedulerGroupNode.eventGroup.loop = true
 
   const monoNode = await MonoNode.create(ctx, {
@@ -76,7 +85,7 @@ const main = async () => {
       value={code}
       language="js"
       theme="monokai"
-      oninput={function(this: CodeEditElement) {
+      oninput={function (this: CodeEditElement) {
         monoNode.setCode(this.value)
       }}
     />,

@@ -61,7 +61,7 @@ const deprecated = [
   'jest.config.js',
   'web-test-runner.config.js',
 ]
-deprecated.forEach(x => {
+deprecated.forEach((x) => {
   try {
     fs.rmSync(x, { recursive: true })
     console.log('removed', x)
