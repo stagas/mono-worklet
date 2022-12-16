@@ -124,6 +124,7 @@ export class MonoProcessor extends SchedulerTargetProcessor {
       this.vm.exports.fill(0, currentFrame - this.offsetFrame, 0, 0)
     }
 
+    this.suspended = false
     // @ts-ignore
     this.vm.exports[MidiOp[payload[0]]]?.(payload[1], payload[2])
   }
