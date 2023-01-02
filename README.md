@@ -1,7 +1,7 @@
 
 
 <h1>
-mono-worklet <a href="https://npmjs.org/package/mono-worklet"><img src="https://img.shields.io/badge/npm-v1.1.0-F00.svg?colorA=000"/></a> <a href="src"><img src="https://img.shields.io/badge/loc-302-FFF.svg?colorA=000"/></a> <a href="https://cdn.jsdelivr.net/npm/mono-worklet@1.1.0/dist/mono-worklet.min.js"><img src="https://img.shields.io/badge/brotli-3.3K-333.svg?colorA=000"/></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-F0B.svg?colorA=000"/></a>
+mono-worklet <a href="https://npmjs.org/package/mono-worklet"><img src="https://img.shields.io/badge/npm-v2.0.0-F00.svg?colorA=000"/></a> <a href="src"><img src="https://img.shields.io/badge/loc-302-FFF.svg?colorA=000"/></a> <a href="https://cdn.jsdelivr.net/npm/mono-worklet@2.0.0/dist/mono-worklet.min.js"><img src="https://img.shields.io/badge/brotli-3.3K-333.svg?colorA=000"/></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-F0B.svg?colorA=000"/></a>
 </h1>
 
 <p></p>
@@ -143,4 +143,4 @@ All contributions are welcome!
 
 ## License
 
-<a href="LICENSE">MIT</a> &copy; 2022 [stagas](https://github.com/stagas)
+<a href="LICENSE">MIT</a> &copy; 2023 [stagas](https://github.com/stagas)
