@@ -59,8 +59,6 @@ export class MonoProcessor extends SchedulerTargetProcessor {
   async setCode(code: string) {
     await this.vm.setCode(code)
 
-    // console.log(this.vm.exports.note_on)
-    // console.log(this.vm.exports.note_on?.length)
     if (this.initial) {
       this.initial = false
       this.vm.exports.sampleRate.value = sampleRate
@@ -189,10 +187,6 @@ export class MonoProcessor extends SchedulerTargetProcessor {
 
     vm.setNumberOfChannels(channelCount)
 
-    //!> count++
-    //!> if (count % 500 === 0)
-    //!time 'fill'
-
     if (channelCount) copyBuffers(inputs, vm.inputs, channelCount, vm)
 
     vm.params.forEach((x, i) => {
@@ -207,67 +201,31 @@ export class MonoProcessor extends SchedulerTargetProcessor {
     const processEvents = []
 
     if (events.length) {
-      //!? events
       this.lastMidiEventTime = currentTime
-      // let i = 0
       // TODO: saturate number of events to a maximum
       for (const event of events) {
         if (event.deltaFrame) {
           processEvents.push([0, frame, totalFrames, totalFrames + event.deltaFrame])
-          // for (let channel = 0; channel < channelCount; channel++) {
-          // vm.exports.fill(channel, frame, totalFrames, totalFrames + event.deltaFrame)
-          // }
-          // i++
           frame += event.deltaFrame
           totalFrames += event.deltaFrame
         }
-        // TODO: we should probably handle the events in wasm side
-        //  and instead pass all of the events at once by writing to a shared buffer
-        //  which will then be consumed by the wasm vm, because calling functions
-        //  (crossing boundaries) is expensive. though they're usually not that many
-        //  so it should be fine for now.
         processEvents.push([1, event.data[0], event.data[1], event.data[2]])
-        // this.handleMidiEvent(event.data, i > 0)
-        // i++
       }
     } else {
       if (currentTime - this.lastMidiEventTime > this.timeToSuspend) {
-        //!? 'suspended'
         this.suspended = true
       }
     }
 
     if (totalFrames < vm.config.blockSize) {
       processEvents.push([0, frame, totalFrames, vm.config.blockSize])
-      // for (let channel = 0; channel < channelCount; channel++) {
-      //   vm.exports.fill(channel, frame, totalFrames, vm.config.blockSize)
-      // }
     }
 
     vm.ints.set(processEvents.slice(0, 128).flat(), vm.config.eventsPointer >> 2)
 
-    // const ints = new DataView(vm.memory.buffer, ptr + 20, processEvents.length << 2)
-    // for (let i = 0; i < processEvents.length; i++) {
-    //   ints.setInt32(i << 2, processEvents[i], true)
-    // }
-    // if (processEvents.length) {
-    //   console.log(processEvents)
-    // }
-    // ints.(processEvents)
-    // vm.ints.set(processEvents, ptr + 20)
     vm.exports.process(1, Math.min(128, processEvents.length))
 
-    //!> if (count % 500 === 0)
-    //!timeEnd 'fill'
-
     copyBuffers(vm.outputs, outputs, channelCount, vm)
-    // if (channelCount > 1) {
-    //   console.log('what')
-    //   debugger
-    // }
-    // if (outputs[1][0] !== 0) {
-    //   debugger
-    // }
 
     this.didPlay = true
 
