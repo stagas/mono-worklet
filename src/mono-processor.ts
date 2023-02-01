@@ -159,13 +159,14 @@ export class MonoProcessor extends SchedulerTargetProcessor {
     this.vm.exports.fill(0, currentFrame - this.offsetFrame, 0, 0)
   }
 
-  processMidiEvents() {
+  processMidiEvents(midiEvents: MIDIMessageEvent[]) {
     // if (this.vm.exports) {
     //   this.vm.exports.currentTime.value = currentFrame / sampleRate
     // }
 
     // wake-up
     this.suspended = false
+    this.lastMidiEventTime = currentTime
   }
 
   processWithMidi(
@@ -176,13 +177,15 @@ export class MonoProcessor extends SchedulerTargetProcessor {
   ) {
     if (this.disabled) return false
 
-    const { vm } = this
-    if (!vm.isReady) return true
+    if (this.suspended) return true
+
+    const { vm, isReady } = this
+    if (!vm.isReady || !isReady) return true
 
     const { parametersMap } = MonoProcessor
 
     const inputs: (Float32Array | null)[] = []
-    let activeInputChannelCount = 0
+    // let activeInputChannelCount = 0
 
     for (let i = 0; i < possibleInputs.length; i++) {
       const x = possibleInputs[i]
@@ -190,20 +193,20 @@ export class MonoProcessor extends SchedulerTargetProcessor {
       if (i < vm.config.channels || hasSound) {
         if (hasSound) {
           inputs.push(x)
-          activeInputChannelCount++
+          // activeInputChannelCount++
         } else {
           inputs.push(null)
         }
       }
     }
 
-    if (this.suspended) {
-      // wake-up on input
-      if (activeInputChannelCount) {
-        this.lastMidiEventTime = currentTime
-        this.suspended = false
-      } else return true
-    }
+    // if (this.suspended) {
+    //   // wake-up on input
+    //   if (activeInputChannelCount) {
+    //     this.lastMidiEventTime = currentTime
+    //     this.suspended = false
+    //   } else return true
+    // }
 
     const channelCount = inputs.length || 1
 
