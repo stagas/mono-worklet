@@ -28,6 +28,8 @@ export class MonoProcessor extends SchedulerTargetProcessor {
     )
   }
 
+  private startVmMem!: Float32Array
+
   private vm!: VM
   private initial = false
   private suspended = true
@@ -56,13 +58,30 @@ export class MonoProcessor extends SchedulerTargetProcessor {
     this.timeToSuspend = ms
   }
 
-  async setCode(code: string) {
+  async restartMem() {
+    this.vm.floats.set(this.startVmMem)
+  }
+
+  async setCode(code: string, reset = false) {
+    if (this.startVmMem) {
+      if (reset) {
+        this.vm.floats.set(this.startVmMem)
+        this.vm.isReady = false
+        this.isReady = false
+      }
+    } else {
+      this.startVmMem = this.vm.floats.slice()
+    }
+
     await this.vm.setCode(code)
 
-    if (this.initial) {
+    if (this.initial || reset) {
       this.initial = false
       this.vm.exports.sampleRate.value = sampleRate
-      this.vm.exports.currentTime.value = 1
+      this.vm.exports.currentTime.value = currentTime
+      this.isReady = true
+      this.resetTimeAndWakeup()
+      this.lastMidiEventTime = currentTime
     }
 
     return { params: this.vm.params }
@@ -79,9 +98,12 @@ export class MonoProcessor extends SchedulerTargetProcessor {
   async createVM() {
     this.initial = true
     this.didPlay = false
+
     const code = this.vm?.code
     const sampleBuffers = this.vm?.sampleBuffers
+
     this.vm = new VM()
+
     if (this.workerPort) {
       this.vm.setPort(this.workerPort)
       if (code) {

@@ -98,11 +98,18 @@ export class MonoNode extends SchedulerTargetNode {
 
   public code?: string
 
-  async setCode(code: string) {
+  async setCode(code: string, reset = false) {
     this.code = code
     try {
+      if (reset) {
+        this.schedulerTarget.midiQueue.clear()
+      }
 
-      const { params } = await this.worklet.setCode(code)
+      const { params } = await this.worklet.setCode(code, reset)
+
+      if (reset) {
+        this.schedulerTarget.midiQueue.clear()
+      }
 
       this.vmParams = params.map((x: MonoParam) => new MonoParam(x))
       this.vmParamsMap.clear()
@@ -125,6 +132,10 @@ export class MonoNode extends SchedulerTargetNode {
       this.vmParamsMap.clear()
       throw error
     }
+  }
+
+  async restartMem() {
+    return this.worklet.restartMem()
   }
 
   suspend() {
