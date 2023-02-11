@@ -1,5 +1,5 @@
 import { VM } from 'monolang'
-import { MIDIMessageEvent, SchedulerTargetProcessor } from 'scheduler-node/target-processor'
+import { Clock, MIDIMessageEvent, SchedulerTargetProcessor } from 'scheduler-node/target-processor'
 import { copyBuffers } from './util'
 
 // @ts-ignore
@@ -35,12 +35,14 @@ export class MonoProcessor extends SchedulerTargetProcessor {
   private suspended = true
   private disabled = false
 
-  private offsetFrame = 0
-
   private lastMidiEventTime = 0
-  private timeToSuspend = 5
+  private timeToSuspend = 15
 
   private didPlay = false
+
+  clock = new Clock()
+
+  // private prevFrame = 0
 
   constructor(public options: AudioWorkletNodeOptions) {
     super()
@@ -54,11 +56,15 @@ export class MonoProcessor extends SchedulerTargetProcessor {
     this.vm.setPort(port)
   }
 
+  setClockBuffer(clockBuffer: Float64Array) {
+    this.clock.buffer = clockBuffer
+  }
+
   setTimeToSuspend(ms: number) {
     this.timeToSuspend = ms
   }
 
-  async restartMem() {
+  restartMem() {
     this.vm.floats.set(this.startVmMem)
   }
 
@@ -80,7 +86,7 @@ export class MonoProcessor extends SchedulerTargetProcessor {
       this.vm.exports.sampleRate.value = sampleRate
       this.vm.exports.currentTime.value = currentTime
       this.isReady = true
-      this.resetTimeAndWakeup()
+      this.resume()
       this.lastMidiEventTime = currentTime
     }
 
@@ -141,7 +147,7 @@ export class MonoProcessor extends SchedulerTargetProcessor {
     // midi event arrives
     // TODO: what about other channels?
     if (!noFill) {
-      this.vm.exports.fill(0, currentFrame - this.offsetFrame, 0, 0)
+      this.vm.exports.fill(0, currentFrame - this.clock.offsetFrame, 0, 0)
     }
 
     this.suspended = false
@@ -149,15 +155,10 @@ export class MonoProcessor extends SchedulerTargetProcessor {
     this.vm.exports[MidiOp[payload[0]]]?.(payload[1], payload[2])
   }
 
-  resetTime() {
-    this.offsetFrame = currentFrame
-  }
-
-  resetTimeAndWakeup() {
-    this.resetTime()
-    this.suspended = false
-    this.vm.exports.fill(0, currentFrame - this.offsetFrame, 0, 0)
-  }
+  // wakeup() {
+  //   this.suspended = false
+  //   this.vm.exports.fill(0, currentFrame - this.offsetFrame, 0, 0)
+  // }
 
   processMidiEvents(midiEvents: MIDIMessageEvent[]) {
     // if (this.vm.exports) {
@@ -181,6 +182,13 @@ export class MonoProcessor extends SchedulerTargetProcessor {
 
     const { vm, isReady } = this
     if (!vm.isReady || !isReady) return true
+
+    vm.exports.coeff.value = this.clock.coeff
+
+    let frame = currentFrame - this.clock.offsetFrame
+    if (frame + 128 < 0) {
+      return true
+    }
 
     const { parametersMap } = MonoProcessor
 
@@ -220,10 +228,11 @@ export class MonoProcessor extends SchedulerTargetProcessor {
       vm.exports[x.name].value = value
     })
 
-    let frame = currentFrame - this.offsetFrame
     let totalFrames = 0
 
     const processEvents = []
+
+    processEvents.push([0, frame, 0, 0])
 
     if (events.length) {
       this.lastMidiEventTime = currentTime

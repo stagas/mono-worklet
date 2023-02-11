@@ -134,7 +134,11 @@ export class MonoNode extends SchedulerTargetNode {
     }
   }
 
-  async restartMem() {
+  setClockBuffer(clockBuffer: Float64Array) {
+    return this.worklet.setClockBuffer(clockBuffer)
+  }
+
+  restartMem() {
     return this.worklet.restartMem()
   }
 
