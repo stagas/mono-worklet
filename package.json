@@ -3,7 +3,7 @@
   "author": "stagas",
   "short": "stagas/mono-worklet",
   "description": "mono lang AudioWorkletNode",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -79,8 +79,8 @@
   "dependencies": {
     "alice-bob": "^2.0.0",
     "better-console-time": "^1.0.0",
-    "monolang": "^3.3.0",
-    "scheduler-node": "^2.1.0"
+    "monolang": "^3.4.0",
+    "scheduler-node": "^2.2.0"
   },
   "types": "./dist/types/index.d.ts"
 }
